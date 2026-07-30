@@ -1,9 +1,0 @@
-/tmp/
-/target/
-*.sum
-/fyne-cross/
-*.bin
-*.exe
-.env
-*.pem
-/.idea/
