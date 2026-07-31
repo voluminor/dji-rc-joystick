@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -17,6 +18,7 @@ import (
 
 const (
 	fallbackKey = "en"
+	formatVerbs = "vTtbcdoOxXUeEfFgGspq"
 	nameKey     = "language.name"
 )
 
@@ -181,6 +183,57 @@ func compareKeys(entry entryObj, reference entryObj) error {
 	return fmt.Errorf("%s does not match %s: %s", entry.key+".json", reference.key+".json", strings.Join(parts, "; "))
 }
 
+func formatDirectives(value string) []string {
+	directives := make([]string, 0, 2)
+	for index := 0; index+1 < len(value); index++ {
+		if value[index] != '%' {
+			continue
+		}
+
+		verb := value[index+1]
+		if verb == '%' {
+			index++
+			continue
+		}
+		if strings.IndexByte(formatVerbs, verb) < 0 {
+			continue
+		}
+
+		directives = append(directives, value[index:index+2])
+		index++
+	}
+
+	return directives
+}
+
+func compareFormatDirectives(entry entryObj, reference entryObj) error {
+	mismatches := make([]string, 0)
+	for _, key := range sortedKeys(reference.values) {
+		value, ok := entry.values[key]
+		if !ok {
+			continue
+		}
+
+		want := formatDirectives(reference.values[key])
+		got := formatDirectives(value)
+		if slices.Equal(got, want) {
+			continue
+		}
+
+		mismatches = append(mismatches, fmt.Sprintf(
+			"key %q: got [%s], want [%s]",
+			key,
+			strings.Join(got, ", "),
+			strings.Join(want, ", "),
+		))
+	}
+	if len(mismatches) == 0 {
+		return nil
+	}
+
+	return fmt.Errorf("%s has formatting directive mismatch: %s", entry.key+".json", strings.Join(mismatches, "; "))
+}
+
 func readCatalog(sourceDir string) (catalogObj, error) {
 	directoryEntries, err := os.ReadDir(sourceDir)
 	if err != nil {
@@ -227,6 +280,9 @@ func readCatalog(sourceDir string) (catalogObj, error) {
 			continue
 		}
 		if mismatchErr := compareKeys(entry, reference); mismatchErr != nil {
+			mismatchErrors = append(mismatchErrors, mismatchErr)
+		}
+		if mismatchErr := compareFormatDirectives(entry, reference); mismatchErr != nil {
 			mismatchErrors = append(mismatchErrors, mismatchErr)
 		}
 	}

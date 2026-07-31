@@ -366,6 +366,38 @@ func TestHomeBuildsConnectedControllerBlock(t *testing.T) {
 	}
 }
 
+func TestHomeRefreshesEverySupportedLanguage(t *testing.T) {
+	windowObj, _ := newTestWindow(t, newFakeRemote())
+	home := windowObj.home
+
+	for _, option := range windowObj.data.Language().List() {
+		ui := windowObj.data.UI()
+		ui.Language = option.Key
+		if err := windowObj.data.SaveUI(ui); err != nil {
+			t.Fatalf("SaveUI(%q) error = %v", option.Key, err)
+		}
+
+		fyne.DoAndWait(home.refreshLanguage)
+		wantMode := windowObj.data.Language().Get("home.mode.automatic", "")
+		if len(home.mode.Options) == 0 || home.mode.Options[0] != wantMode {
+			t.Errorf("automatic mode for %q = %q, want %q", option.Key, home.mode.Options, wantMode)
+		}
+		wantStick := windowObj.data.Language().Get("home.controls.left_stick", "")
+		if home.controls.stickTitles[leftControl].Text != wantStick {
+			t.Errorf(
+				"left stick for %q = %q, want %q",
+				option.Key,
+				home.controls.stickTitles[leftControl].Text,
+				wantStick,
+			)
+		}
+		wantGamepad := windowObj.data.Language().Get("home.gamepad.title", "")
+		if home.gamepad.title.Text != wantGamepad {
+			t.Errorf("gamepad title for %q = %q, want %q", option.Key, home.gamepad.title.Text, wantGamepad)
+		}
+	}
+}
+
 func TestHomeAppliesCompletedDiscoveryResults(t *testing.T) {
 	remoteObj := newFakeRemote()
 	windowObj, _ := newTestWindow(t, remoteObj)

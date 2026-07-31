@@ -150,7 +150,41 @@ The **Interface** tab controls:
 
 - light or dark theme;
 - text-size multiplier from `0.2` to `8.0`;
-- English (`en`) or Russian (`ru-RU`) interface language.
+- one of 27 supported interface languages.
+
+### Supported interface languages
+
+The GUI includes these 27 left-to-right locales:
+
+| Locale  | Native name        |
+|---------|--------------------|
+| `bn`    | বাংলা              |
+| `cs`    | Čeština            |
+| `de`    | Deutsch            |
+| `el`    | Ελληνικά           |
+| `en`    | English            |
+| `es`    | Español            |
+| `fil`   | Filipino           |
+| `fr`    | Français           |
+| `hi`    | हिन्दी             |
+| `hu`    | Magyar             |
+| `id`    | Bahasa Indonesia   |
+| `it`    | Italiano           |
+| `ja`    | 日本語                |
+| `ko`    | 한국어                |
+| `ms`    | Bahasa Melayu      |
+| `nl`    | Nederlands         |
+| `pl`    | Polski             |
+| `pt-BR` | Português (Brasil) |
+| `ro`    | Română             |
+| `ru-RU` | Русский            |
+| `sv`    | Svenska            |
+| `th`    | ไทย                |
+| `tr`    | Türkçe             |
+| `uk-UA` | Українська         |
+| `vi`    | Tiếng Việt         |
+| `zh-CN` | 简体中文               |
+| `zh-TW` | 繁體中文               |
 
 Saving a language change updates the persistent Home view without disconnecting
 the remote. The **About** tab shows the application version, source link,

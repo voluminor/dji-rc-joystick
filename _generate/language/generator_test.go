@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -185,6 +186,46 @@ func TestGenerateRejectsKeyMismatch(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "missing keys: home.title") {
 		t.Fatalf("generate() error does not list missing key: %v", err)
+	}
+}
+
+func TestGenerateAcceptsMatchingFormatDirectives(t *testing.T) {
+	directory := t.TempDir()
+	writeTestFile(t, directory, "en.json", `{
+		"language.name":"English",
+		"home.connect.message":"Connecting to %s:%d. Progress: 100%%."
+	}`)
+	writeTestFile(t, directory, "de.json", `{
+		"language.name":"Deutsch",
+		"home.connect.message":"Verbindung mit %s:%d wird hergestellt. Fortschritt: 100%%."
+	}`)
+
+	if err := generate(directory, filepath.Join(t.TempDir(), "languages_gen.go"), "language"); err != nil {
+		t.Fatalf("generate() error = %v", err)
+	}
+}
+
+func TestGenerateRejectsFormatDirectiveMismatch(t *testing.T) {
+	tests := map[string]string{
+		"missing":   "Verbindung mit %s wird hergestellt.",
+		"added":     "Verbindung mit %s:%d wird hergestellt: %d.",
+		"reordered": "Verbindung mit %d:%s wird hergestellt.",
+		"changed":   "Verbindung mit %s:%s wird hergestellt.",
+	}
+
+	for name, translation := range tests {
+		t.Run(name, func(t *testing.T) {
+			requireGenerationError(t, map[string]string{
+				"en.json": `{
+					"language.name":"English",
+					"home.connect.message":"Connecting to %s:%d."
+				}`,
+				"de.json": `{
+					"language.name":"Deutsch",
+					"home.connect.message":` + fmt.Sprintf("%q", translation) + `
+				}`,
+			}, `de.json has formatting directive mismatch: key "home.connect.message"`)
+		})
 	}
 }
 

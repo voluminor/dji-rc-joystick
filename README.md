@@ -50,7 +50,8 @@ The repository also provides ready-to-use applications:
 - [CLI](cli/README.md) offers virtual-gamepad emulation, terminal monitoring,
   NDJSON output, controller discovery, and protocol diagnostics.
 - [GUI](gui/README.md) provides a windowed monitor, live control visualization,
-  binding configuration, and emulation controls.
+  binding configuration, and emulation controls. Its interface is available in
+  [27 languages](gui/README.md#supported-interface-languages).
 
 Release assets are published on
 [GitHub Releases](https://github.com/voluminor/dji-rc-joystick/releases). The

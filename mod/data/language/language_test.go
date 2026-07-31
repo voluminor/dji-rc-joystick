@@ -117,14 +117,53 @@ func TestListUsesGeneratedLanguageNames(t *testing.T) {
 		t.Fatalf("New() error = %v", err)
 	}
 
+	wantNames := map[string]string{
+		"bn":    "বাংলা",
+		"cs":    "Čeština",
+		"de":    "Deutsch",
+		"el":    "Ελληνικά",
+		"en":    "English",
+		"es":    "Español",
+		"fil":   "Filipino",
+		"fr":    "Français",
+		"hi":    "हिन्दी",
+		"hu":    "Magyar",
+		"id":    "Bahasa Indonesia",
+		"it":    "Italiano",
+		"ja":    "日本語",
+		"ko":    "한국어",
+		"ms":    "Bahasa Melayu",
+		"nl":    "Nederlands",
+		"pl":    "Polski",
+		"pt-BR": "Português (Brasil)",
+		"ro":    "Română",
+		"ru-RU": "Русский",
+		"sv":    "Svenska",
+		"th":    "ไทย",
+		"tr":    "Türkçe",
+		"uk-UA": "Українська",
+		"vi":    "Tiếng Việt",
+		"zh-CN": "简体中文",
+		"zh-TW": "繁體中文",
+	}
+
 	options := obj.List()
-	if len(options) != 2 {
-		t.Fatalf("List() returned %d options, want 2", len(options))
+	if len(options) != len(wantNames) {
+		t.Fatalf("List() returned %d options, want %d", len(options), len(wantNames))
 	}
 
 	for index, option := range options {
 		if index > 0 && options[index-1].Key >= option.Key {
 			t.Fatalf("List() is not sorted: %q before %q", options[index-1].Key, option.Key)
+		}
+		if want, ok := wantNames[option.Key]; !ok || option.Name != want {
+			t.Errorf("List() option %q has name %q, want %q", option.Key, option.Name, want)
+		}
+		if err = obj.Set(option.Key); err != nil {
+			t.Errorf("Set(%q) error = %v", option.Key, err)
+		}
+		if value := obj.Get("button.save", ""); value == "" {
+			t.Errorf("Get(button.save) is empty for %q", option.Key)
 		}
 	}
 }
