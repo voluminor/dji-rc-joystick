@@ -10,6 +10,10 @@ import (
 
 const frameIdleTimeout = time.Second
 
+// Keep input fail-safe at one second, but allow the transport time to recover
+// from USB/network scheduling stalls without destroying every backup socket.
+const transportIdleTimeout = 3 * time.Second
+
 var errFrameIdle = errors.New("rc: no valid controller frame received for one second")
 
 // streamLiveness keeps quiet backup links open while any reader is delivering.
@@ -63,7 +67,7 @@ func (obj *readerLivenessObj) expired(now time.Time) bool {
 	if obj.connectedAt.IsZero() {
 		return false
 	}
-	return now.Sub(obj.stream.latest(obj.connectedAt)) >= frameIdleTimeout
+	return now.Sub(obj.stream.latest(obj.connectedAt)) >= transportIdleTimeout
 }
 
 func (c *coordinatorObj) applyLinkSignal(signal linkSignalObj) int {
@@ -106,7 +110,11 @@ func (c *coordinatorObj) neutralize() {
 	}
 	state := neutralState()
 	c.obj.publishSyntheticState(state)
-	if c.obj.feed(state) != nil {
+	// Unknown is appropriate for display, but Feed skips an unknown mode.
+	// Explicitly center its output so a mode mapped to Xbox D-pad cannot stick.
+	output := state
+	output.Mode = ModeNormal
+	if c.obj.feed(output) != nil {
 		c.errCount++
 	}
 	c.stateLive = false

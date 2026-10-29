@@ -294,7 +294,7 @@ func TestPipelineDeliversStateAndKeepalive(t *testing.T) {
 		}
 	}()
 
-	obj, err := New(ConfigObj{IP: "127.0.0.1", Port: ln.Addr().(*net.TCPAddr).Port})
+	obj, err := New(ConfigObj{IP: "127.0.0.1", Port: ln.Addr().(*net.TCPAddr).Port, Keepalive: KeepaliveVersion, Connections: 1})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -351,6 +351,7 @@ func TestPipelinePublishesAggregateLinksAndDiagnostics(t *testing.T) {
 
 	obj, err := New(ConfigObj{
 		IP: "127.0.0.1", Port: ln.Addr().(*net.TCPAddr).Port, Keepalive: KeepaliveOff,
+		Connections: 1,
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -62,6 +62,10 @@ ui:
     usage: "User interface language."
 
 mapping:
+  backend:
+    type: string
+    value: vigem
+    usage: "Windows virtual gamepad backend: vigem or vjoy."
   usage: "DJI control -> virtual-device action bindings. Runtime consumers validate action names, source compatibility, and conflicting targets before device creation."
   axes:
     usage: "Sticks, wheels and the mode switch -> continuous targets: axis_x, axis_y, axis_z, axis_rx, axis_ry, axis_rz, axis_slider0, axis_slider1, wheel/hwheel (mouse scroll), unmapped."
@@ -89,7 +93,7 @@ mapping:
       usage: "Right stick horizontal."
       action:
         type: string
-        value: axis_z
+        value: axis_rx
         usage: "Target action."
       invert:
         type: bool
@@ -99,7 +103,7 @@ mapping:
       usage: "Right stick vertical."
       action:
         type: string
-        value: axis_rx
+        value: axis_ry
         usage: "Target action."
       invert:
         type: bool
@@ -109,7 +113,7 @@ mapping:
       usage: "Left dial/wheel (bind action to 'wheel' for mouse scroll)."
       action:
         type: string
-        value: axis_slider0
+        value: axis_z
         usage: "Target action."
       invert:
         type: bool
@@ -119,7 +123,7 @@ mapping:
       usage: "Right dial/wheel (bind action to 'wheel' for mouse scroll)."
       action:
         type: string
-        value: axis_slider1
+        value: axis_rz
         usage: "Target action."
       invert:
         type: bool
@@ -127,7 +131,7 @@ mapping:
         usage: "Reverse the direction."
     mode:
       type: string
-      value: axis_ry
+      value: unmapped
       usage: "Flight-mode switch (Sport/Normal/Cinema as 0/1/2)."
   buttons:
     usage: "Remote buttons -> discrete actions: button (next free gamepad button), button1..button79 (a specific gamepad button), wheel_up/wheel_down/hwheel_left/hwheel_right (one scroll tick per decoded state while held), unmapped."

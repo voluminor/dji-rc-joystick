@@ -163,6 +163,23 @@ func TestManualTargetValidation(t *testing.T) {
 	}
 }
 
+func TestManualTargetRemembersLastConnection(t *testing.T) {
+	window, application := newTestWindow(t, newFakeRemote())
+	fyne.DoAndWait(func() {
+		window.home.connect("192.0.2.63", 40008)
+		if application.Preferences().String(lastRemoteIPPreference) != "192.0.2.63" {
+			t.Error("last connection address was not saved")
+		}
+		window.home.buildManual()
+		if window.home.ipEntry.Text != "192.0.2.63" || window.home.portEntry.Text != "40008" {
+			t.Errorf("restored endpoint = %s:%s", window.home.ipEntry.Text, window.home.portEntry.Text)
+		}
+		if window.home.manualConnect.Disabled() {
+			t.Error("restored valid endpoint cannot connect")
+		}
+	})
+}
+
 func TestFormatRemoteOptionOmitsMissingDetails(t *testing.T) {
 	tests := []struct {
 		name   string

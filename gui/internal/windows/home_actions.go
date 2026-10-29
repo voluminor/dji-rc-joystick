@@ -113,6 +113,9 @@ func (obj *homeObj) connect(ip string, port int) {
 		dialog.ShowError(err, obj.owner.window)
 		return
 	}
+	preferences := obj.owner.application.Preferences()
+	preferences.SetString(lastRemoteIPPreference, ip)
+	preferences.SetInt(lastRemotePortPreference, port)
 	obj.applySnapshot(obj.remote.Snapshot())
 }
 

@@ -10,7 +10,7 @@ import (
 // // // // // // // // // //
 
 const (
-	connectTimeout = 100 * time.Millisecond
+	connectTimeout = 2 * time.Second
 	readTimeout    = 20 * time.Millisecond
 	drainTimeout   = 5 * time.Millisecond
 	sendTimeout    = time.Second

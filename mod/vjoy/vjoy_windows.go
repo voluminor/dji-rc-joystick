@@ -5,6 +5,9 @@ package vjoy
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -41,7 +44,7 @@ const (
 var (
 	// NewLazyDLL: vJoyInterface.dll ships with the vJoy driver, not with
 	// Windows, so the system-DLL loader restriction does not apply.
-	vjoyDLL                = windows.NewLazyDLL("vJoyInterface.dll")
+	vjoyDLL                = windows.NewLazyDLL(vjoyDLLPath())
 	procVJoyEnabled        = vjoyDLL.NewProc("vJoyEnabled")
 	procGetVJDStatus       = vjoyDLL.NewProc("GetVJDStatus")
 	procGetVJDAxisExist    = vjoyDLL.NewProc("GetVJDAxisExist")
@@ -55,6 +58,28 @@ var (
 	user32        = windows.NewLazySystemDLL("user32.dll")
 	procSendInput = user32.NewProc("SendInput")
 )
+
+// The driver installer does not necessarily add its SDK DLL to PATH.
+func vjoyDLLPath() string {
+	exe, _ := os.Executable()
+	local := filepath.Join(filepath.Dir(exe), "vJoyInterface.dll")
+	candidates := []string{local}
+	arch := "x64"
+	if runtime.GOARCH == "arm64" {
+		arch = "arm64"
+	}
+	for _, root := range []string{os.Getenv("ProgramW6432"), os.Getenv("ProgramFiles")} {
+		if root != "" {
+			candidates = append(candidates, filepath.Join(root, "vJoy", arch, "vJoyInterface.dll"))
+		}
+	}
+	for _, path := range candidates {
+		if info, err := os.Stat(path); err == nil && !info.IsDir() {
+			return path
+		}
+	}
+	return local
+}
 
 // //
 
@@ -170,7 +195,7 @@ func acquireDevice(dev *deviceObj, axisUsages []uint32, buttons int) error {
 
 // //
 
-func newDevice(spec SpecObj) (Interface, error) {
+func newVJoyDevice(spec SpecObj) (Interface, error) {
 	dev := &deviceObj{
 		binds: make(map[uint16]winBindObj, len(spec.Controls)),
 	}

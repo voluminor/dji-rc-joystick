@@ -44,6 +44,7 @@ type Obj struct {
 
 func cloneMapping(mapping rc.MappingObj) rc.MappingObj {
 	clone := rc.MappingObj{
+		Backend: mapping.Backend,
 		Axes:    make(map[rc.AxisID]string, len(mapping.Axes)),
 		Invert:  make(map[rc.AxisID]bool, len(mapping.Invert)),
 		Mode:    mapping.Mode,

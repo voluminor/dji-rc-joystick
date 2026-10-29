@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -83,14 +84,14 @@ func TestNewWritesIndependentConsoleAndFileLevels(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stat log file: %v", err)
 	}
-	if permissions := info.Mode().Perm(); permissions != 0o600 {
+	if permissions := info.Mode().Perm(); runtime.GOOS != "windows" && permissions != 0o600 {
 		t.Fatalf("log permissions = %o, want 600", permissions)
 	}
 	directoryInfo, err := os.Stat(filepath.Dir(expectedPath))
 	if err != nil {
 		t.Fatalf("stat log directory: %v", err)
 	}
-	if permissions := directoryInfo.Mode().Perm(); permissions != 0o700 {
+	if permissions := directoryInfo.Mode().Perm(); runtime.GOOS != "windows" && permissions != 0o700 {
 		t.Fatalf("log directory permissions = %o, want 700", permissions)
 	}
 }

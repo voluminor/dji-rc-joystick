@@ -19,6 +19,7 @@ import (
 
 func (obj *homeGamepadObj) current() targetsettings.MappingObj {
 	mapping := obj.saved
+	mapping.Backend = backendID(obj.backend.Selected)
 	axes := &mapping.Axes
 	axes.LeftStickH.Action = obj.axes[rc.AxisLeftH].action.Selected
 	axes.LeftStickH.Invert = obj.axes[rc.AxisLeftH].invert.Checked
@@ -56,6 +57,11 @@ func (obj *homeGamepadObj) handleMappingChange() {
 }
 
 func (obj *homeGamepadObj) updateControls(editable bool) {
+	if editable {
+		obj.backend.Enable()
+	} else {
+		obj.backend.Disable()
+	}
 	for _, field := range obj.axes {
 		if editable {
 			field.action.Enable()
@@ -180,6 +186,14 @@ func (obj *homeGamepadObj) update(snapshot guiremote.SnapshotObj) {
 	obj.remotePhase = snapshot.Phase
 	obj.profile = snapshot.Profile
 	obj.updateStatus()
+	if obj.wantRunning && (obj.phase == gamepad.PhaseRunning || obj.phase == gamepad.PhaseWaiting) && !obj.owner.application.Preferences().Bool(gamepadResumePreference) {
+		obj.owner.application.Preferences().SetBool(gamepadResumePreference, true)
+	}
+	if obj.autoStartPending && obj.remotePhase == guiremote.PhaseConnected && !gamepadLocked(obj.phase) && !obj.dirty {
+		// Consume before Start: callbacks can enqueue another snapshot immediately.
+		obj.autoStartPending = false
+		obj.start()
+	}
 
 	if snapshot.Gamepad.ErrorRevision == obj.lastErrorRevision {
 		return
@@ -214,13 +228,21 @@ func (obj *homeGamepadObj) save() {
 
 func (obj *homeGamepadObj) toggle() {
 	if gamepadLocked(obj.phase) {
+		obj.autoStartPending = false
+		obj.wantRunning = false
+		obj.owner.application.Preferences().SetBool(gamepadResumePreference, false)
 		obj.owner.log.Debug().Msg("GUI gamepad stop button activated")
 		obj.runButton.Disable()
 		go obj.remote.StopGamepad()
 		return
 	}
 
-	obj.owner.log.Debug().Msg("GUI gamepad start button activated")
+	obj.start()
+}
+
+func (obj *homeGamepadObj) start() {
+	obj.wantRunning = true
+	obj.owner.log.Debug().Msg("GUI gamepad start requested")
 	mapping := datasettings.ControlMapping(obj.saved)
 	if err := obj.remote.StartGamepad(mapping); err != nil {
 		obj.showError(

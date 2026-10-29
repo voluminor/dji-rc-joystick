@@ -123,6 +123,8 @@ type ControlObj struct {
 // SpecObj describes a virtual device to create. The package knows nothing
 // about DJI: any producer can define a device through it.
 type SpecObj struct {
+	// Backend selects the Windows implementation: vigem (default) or vjoy.
+	Backend string
 	// Name is the user-visible device name on platforms that support it.
 	Name string
 	// VendorID is the USB vendor identifier on platforms that support it.
@@ -152,6 +154,9 @@ type Interface interface {
 // //
 
 func validate(spec SpecObj) error {
+	if spec.Backend != "" && spec.Backend != "vigem" && spec.Backend != "vjoy" {
+		return fmt.Errorf("vjoy: unknown backend %q", spec.Backend)
+	}
 	if spec.Name == "" {
 		return errors.New("vjoy: device name is empty")
 	}

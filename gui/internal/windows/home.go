@@ -20,6 +20,9 @@ import (
 
 const homeRefreshInterval = time.Second / 30
 
+const lastRemoteIPPreference = "connection.last_ip"
+const lastRemotePortPreference = "connection.last_port"
+
 type homeObj struct {
 	owner    *Obj
 	remote   remoteInterface
@@ -167,6 +170,14 @@ func (obj *homeObj) buildManual() *fyne.Container {
 			Int("length", len(obj.portEntry.Text)).
 			Msg("GUI connection field changed")
 	}
+	preferences := obj.owner.application.Preferences()
+	if ip := preferences.String(lastRemoteIPPreference); validateIPAddress(ip) == nil {
+		obj.ipEntry.SetText(ip)
+	}
+	if port := preferences.Int(lastRemotePortPreference); port > 0 && port <= 65535 {
+		obj.portEntry.SetText(strconv.Itoa(port))
+	}
+	obj.updateManualConnect()
 
 	fields := container.NewGridWithColumns(
 		2,

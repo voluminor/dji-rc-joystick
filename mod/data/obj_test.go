@@ -67,7 +67,7 @@ func TestObjSavesAndReloadsControlMapping(t *testing.T) {
 	}
 
 	mapping := obj.Mapping()
-	mapping.Axes.LeftStickH.Action = "axis_rz"
+	mapping.Axes.LeftStickH.Action = "axis_slider1"
 	mapping.Axes.LeftStickH.Invert = !mapping.Axes.LeftStickH.Invert
 	if err = obj.SaveMapping(mapping); err != nil {
 		t.Fatal(err)

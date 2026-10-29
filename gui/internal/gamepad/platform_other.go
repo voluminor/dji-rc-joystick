@@ -5,6 +5,7 @@ package gamepad
 import (
 	"context"
 	"io"
+	"os"
 
 	"github.com/voluminor/dji-rc-joystick/mod/vjoy"
 
@@ -24,6 +25,8 @@ func createDevice(
 	device, err := vjoy.New(spec)
 	if err == nil {
 		logger.Info().
+			Str("backend", spec.Backend).
+			Str("requested_backend", os.Getenv("DJI_RC_GAMEPAD")).
 			Str("access", "direct").
 			Msg("Virtual gamepad device created")
 	}

@@ -82,6 +82,8 @@ type ProfileObj struct {
 	Keepalive KeepaliveMode
 	// Connections is the preferred overlapping-link count.
 	Connections int
+	// Handshake answers recurring RC polls by default for this model.
+	Handshake bool
 
 	// AbsentButtons lists universal controls the model never reports.
 	AbsentButtons []ButtonID
@@ -97,6 +99,11 @@ func builtin() []ProfileObj {
 			VendorID:  0x2CA3,
 			ProductID: 0x1023,
 			DeviceIDs: []string{"rm330"},
+			// RM330 firmware 01.00.03.14 recycles sessions and reacts poorly
+			// to repeated inquiries. Overlap passive readers and answer polls.
+			Keepalive:   KeepaliveOff,
+			Connections: 5,
+			Handshake:   true,
 		},
 		{
 			// Field-tested (announces "rc331"): identical wire layout to the

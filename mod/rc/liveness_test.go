@@ -305,10 +305,11 @@ func TestPipelineTimesOutHalfOpenLinkAndNeutralizes(t *testing.T) {
 
 	sink := newSynchronizedSink()
 	obj, err := New(ConfigObj{
-		IP:        "127.0.0.1",
-		Port:      listener.Addr().(*net.TCPAddr).Port,
-		Keepalive: KeepaliveOff,
-		Sink:      sink,
+		IP:          "127.0.0.1",
+		Port:        listener.Addr().(*net.TCPAddr).Port,
+		Keepalive:   KeepaliveOff,
+		Sink:        sink,
+		Connections: 1,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -349,6 +350,9 @@ func TestPipelineTimesOutHalfOpenLinkAndNeutralizes(t *testing.T) {
 	}
 	if value := sink.value(buttonHandle(ButtonRTH)); value != 0 {
 		t.Fatalf("neutral sink RTH = %d, want 0", value)
+	}
+	if value := sink.value(handleMode); value != int32(ModeNormal) {
+		t.Fatalf("neutral sink mode = %d, want centered mode", value)
 	}
 
 	timer := time.NewTimer(livenessTestTimeout)

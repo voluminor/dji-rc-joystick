@@ -24,6 +24,7 @@ func buttonHandle(b ButtonID) uint16 { return handleButtonBase + uint16(b) }
 
 func cloneMapping(mapping MappingObj) MappingObj {
 	clone := MappingObj{
+		Backend: mapping.Backend,
 		Axes:    make(map[AxisID]string, len(mapping.Axes)),
 		Invert:  make(map[AxisID]bool, len(mapping.Invert)),
 		Mode:    mapping.Mode,
@@ -58,6 +59,8 @@ func action(name string) (vjoy.ActionObj, bool, error) {
 // An empty or ActionUnmapped value leaves the control inert. Keys are the
 // semantic control ids; values are validated against vjoy.Action.
 type MappingObj struct {
+	// Backend selects the Windows virtual gamepad implementation.
+	Backend string
 	// Axes maps semantic axes to continuous vjoy action names.
 	Axes map[AxisID]string
 	// Invert reverses selected axes before output conversion.
@@ -97,6 +100,9 @@ func DefaultMapping() MappingObj {
 // It also rejects collisions early, with the DJI controls named: two analog
 // sources driving one virtual axis, or two buttons pinned to one number.
 func (m MappingObj) Validate() error {
+	if m.Backend != "" && m.Backend != "vigem" && m.Backend != "vjoy" {
+		return fmt.Errorf("unknown gamepad backend %q (use vigem or vjoy)", m.Backend)
+	}
 	if len(m.Axes) > int(AxisCount) {
 		return fmt.Errorf("mapping has more than %d axes", AxisCount)
 	}
@@ -196,5 +202,5 @@ func (m MappingObj) DeviceSpec(p ProfileObj) vjoy.SpecObj {
 			add(buttonHandle(buttonMap.Button), a, 0, 0)
 		}
 	}
-	return vjoy.SpecObj{Name: p.Name, VendorID: p.VendorID, ProductID: p.ProductID, Controls: controls}
+	return vjoy.SpecObj{Backend: m.Backend, Name: p.Name, VendorID: p.VendorID, ProductID: p.ProductID, Controls: controls}
 }

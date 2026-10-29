@@ -45,7 +45,7 @@ type ConfigObj struct {
 	Sink vjoy.Interface
 	// Keepalive selects the command used to sustain each link.
 	Keepalive KeepaliveMode
-	// Handshake answers recurring RC poll packets.
+	// Handshake enables recurring RC poll replies in addition to profile policy.
 	Handshake bool
 	// QueryInfo sends one identity query (firmware/model) on the first link.
 	// It requests an ack, so the remote may reset that link soon after; the

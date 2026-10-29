@@ -194,6 +194,12 @@ func (obj *Obj) Connect(ip string, port int) error {
 	controller.OnInfo(func(info rc.InfoObj) {
 		obj.observeInfo(operation, info)
 	})
+	if diagnostics, ok := controller.(interface{ OnLink(func(rc.LinkEventObj)) }); ok {
+		diagnostics.OnLink(func(event rc.LinkEventObj) {
+			obj.log.Debug().Int("link", event.Index).Bool("online", event.Online).
+				Str("operation", event.Operation).Err(event.Error).Msg("RC transport event")
+		})
+	}
 
 	obj.snapshot.Phase = PhaseConnecting
 	obj.snapshot.TargetIP = resolvedIP

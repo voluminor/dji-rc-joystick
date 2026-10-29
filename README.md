@@ -1,5 +1,8 @@
 # DJI RC Joystick
 
+Windows Xbox-emulation debug build and test instructions:
+[DEBUG-TESTING.md](docs/DEBUG-TESTING.md).
+
 ## UPD 03/08/2026
 
 In the latest firmware update, port 40007 has been close via software. You can stream 40007 in `adb` mode; work is underway on a convenient software solution.
@@ -38,7 +41,7 @@ The root module is `github.com/voluminor/dji-rc-joystick`.
 - [`mod/rc`](mod/rc/README.md) handles discovery, TCP and DUML transport,
   controller profiles, state decoding, bindings, and callbacks.
 - [`mod/vjoy`](mod/vjoy/README.md) defines virtual devices and provides Linux
-  `uinput` and Windows vJoy backends.
+  `uinput` and Windows Xbox 360 (ViGEmBus) / vJoy backends.
 - [`mod/data`](mod/data/README.md) provides shared access to settings, bindings,
   and translations.
 - [`mod/data/settings`](mod/data/settings/README.md) loads, validates, and

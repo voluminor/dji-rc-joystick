@@ -14,6 +14,7 @@ func ControlMapping(mapping targetsettings.MappingObj) rc.MappingObj {
 	a := mapping.Axes
 	b := mapping.Buttons
 	return rc.MappingObj{
+		Backend: mapping.Backend,
 		Axes: map[rc.AxisID]string{
 			rc.AxisLeftH:      a.LeftStickH.Action,
 			rc.AxisLeftV:      a.LeftStickV.Action,

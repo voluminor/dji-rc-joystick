@@ -1,0 +1,7 @@
+{
+  "mapping": {"backend": "vigem", "axes": {"mode": "unmapped"}},
+  "logging": {
+    "console": {"enabled": true, "level": "debug"},
+    "file": {"enabled": true, "level": "debug", "dir": "logs"}
+  }
+}

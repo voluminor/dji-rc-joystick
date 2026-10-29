@@ -31,6 +31,18 @@ func TestDefaultConfigMappingValid(t *testing.T) {
 	}
 }
 
+func TestDefaultFlightModeDoesNotHoldDPad(t *testing.T) {
+	mapping := ControlMapping(targetsettings.New().Mapping)
+	if mapping.Mode != "unmapped" {
+		t.Fatalf("flight mode must be opt-in; got %q", mapping.Mode)
+	}
+	for _, control := range mapping.DeviceSpec(rc.DefaultProfile()).Controls {
+		if control.Handle == 100 {
+			t.Fatal("default device includes a flight-mode output that can hold D-pad")
+		}
+	}
+}
+
 func TestConfigMappingCarriesInvert(t *testing.T) {
 	cfg := targetsettings.New()
 	m := ControlMapping(cfg.Mapping)

@@ -174,8 +174,8 @@ func TestRC2TransportHints(t *testing.T) {
 	}
 
 	rm330, _ := ProfileByID("rc")
-	if rm330.Keepalive != KeepaliveDefault || rm330.Connections != 0 {
-		t.Fatal("rc should keep the default single-link transport")
+	if rm330.Keepalive != KeepaliveOff || rm330.Connections != 5 || !rm330.Handshake {
+		t.Fatal("rc should use staggered passive readers with poll replies")
 	}
 }
 
@@ -184,7 +184,7 @@ func TestEffectiveTransportResolution(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if obj.effectiveConnections() != 1 || obj.effectiveKeepalive() != KeepaliveVersion {
+	if obj.effectiveConnections() != 5 || obj.effectiveKeepalive() != KeepaliveOff || !obj.Profile().Handshake {
 		t.Fatalf("default transport = %d/%d", obj.effectiveConnections(), obj.effectiveKeepalive())
 	}
 

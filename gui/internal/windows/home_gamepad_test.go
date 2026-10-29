@@ -5,6 +5,7 @@ import (
 
 	"github.com/voluminor/dji-rc-joystick/gui/internal/gamepad"
 	guiremote "github.com/voluminor/dji-rc-joystick/gui/internal/remote"
+	datasettings "github.com/voluminor/dji-rc-joystick/mod/data/settings"
 	"github.com/voluminor/dji-rc-joystick/mod/rc"
 
 	"fyne.io/fyne/v2"
@@ -111,6 +112,9 @@ func TestGamepadLocksSettingsWhileRunningOrWaiting(t *testing.T) {
 		if !view.mode.Disabled() || !view.saveButton.Disabled() {
 			t.Fatalf("mode or save is enabled in phase %s", phase)
 		}
+		if !view.backend.Disabled() {
+			t.Fatal("backend can change while emulation owns a device")
+		}
 		if view.runButton.Disabled() || view.runButton.Text != "Stop" {
 			t.Fatalf("stop action is unavailable in phase %s", phase)
 		}
@@ -118,6 +122,68 @@ func TestGamepadLocksSettingsWhileRunningOrWaiting(t *testing.T) {
 
 	if view.status.Text != "Waiting for remote — controls are neutral" {
 		t.Fatalf("waiting status = %q", view.status.Text)
+	}
+}
+
+func TestGamepadBackendDefaultsAndPersists(t *testing.T) {
+	window, _ := newTestWindow(t, newFakeRemote())
+	view := window.home.gamepad
+	if view.backend.Selected != "ViGEmBus" {
+		t.Fatalf("default backend = %q", view.backend.Selected)
+	}
+	fyne.DoAndWait(func() {
+		view.backend.SetSelected("vJoy")
+		view.save()
+	})
+	mapping := window.data.Mapping()
+	if mapping.Backend != "vjoy" {
+		t.Fatalf("saved backend = %q", mapping.Backend)
+	}
+	if datasettings.ControlMapping(mapping).DeviceSpec(rc.DefaultProfile()).Backend != "vjoy" {
+		t.Fatal("selected backend did not reach device specification")
+	}
+}
+
+func TestGamepadResumeWaitsForConnectionAndRunsOnce(t *testing.T) {
+	remote := newFakeRemote()
+	window, app := newTestWindow(t, remote)
+	app.Preferences().SetBool(gamepadResumePreference, true)
+	view := newHomeGamepad(window, remote)
+	fyne.DoAndWait(func() {
+		view.update(guiremote.SnapshotObj{Phase: guiremote.PhaseIdle})
+		if remote.gamepadStarts.Load() != 0 {
+			t.Error("emulation started without a connected RC")
+		}
+		view.update(connectedGamepadSnapshot(gamepad.PhaseStopped, rc.DefaultProfile()))
+		view.update(connectedGamepadSnapshot(gamepad.PhaseStopped, rc.DefaultProfile()))
+	})
+	if got := remote.gamepadStarts.Load(); got != 1 {
+		t.Fatalf("resume starts = %d, want 1", got)
+	}
+}
+
+func TestGamepadStopDisablesResumeButShutdownDoesNot(t *testing.T) {
+	remote := newFakeRemote()
+	window, app := newTestWindow(t, remote)
+	view := window.home.gamepad
+	fyne.DoAndWait(func() {
+		view.wantRunning = true
+		view.update(connectedGamepadSnapshot(gamepad.PhaseRunning, rc.DefaultProfile()))
+		if !app.Preferences().Bool(gamepadResumePreference) {
+			t.Error("successful start was not remembered")
+		}
+		// Automatic teardown must not overwrite the last successful running choice.
+		view.update(guiremote.SnapshotObj{Phase: guiremote.PhaseIdle})
+		if !app.Preferences().Bool(gamepadResumePreference) {
+			t.Error("session teardown cleared resume")
+		}
+		view.update(connectedGamepadSnapshot(gamepad.PhaseRunning, rc.DefaultProfile()))
+		view.toggle()
+		// A queued running snapshot after Stop must not re-enable resume.
+		view.update(connectedGamepadSnapshot(gamepad.PhaseRunning, rc.DefaultProfile()))
+	})
+	if app.Preferences().Bool(gamepadResumePreference) {
+		t.Fatal("Stop did not disable resume")
 	}
 }
 

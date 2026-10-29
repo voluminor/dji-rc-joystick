@@ -219,6 +219,9 @@ func (c *coordinatorObj) loop(ctx context.Context, rawCh <-chan rawSignalObj, pk
 			}
 
 		case signal := <-linkCh:
+			if signal.event.Error != nil {
+				c.errCount++
+			}
 			prev := c.connected
 			delta := c.applyLinkSignal(signal)
 			c.connected += delta
@@ -407,7 +410,7 @@ func (obj *Obj) reader(ctx context.Context, index int, ip string, delay time.Dur
 				if sendErr := link.send(buildResponse(packet, nil)); sendErr != nil {
 					markDown(linkOperationWrite, sendErr)
 				}
-			} else if obj.config.Handshake && isPoll(packet) {
+			} else if (obj.config.Handshake || obj.Profile().Handshake) && isPoll(packet) {
 				if sendErr := link.send(buildResponse(packet, packet.Payload[:packet.Len])); sendErr != nil {
 					markDown(linkOperationWrite, sendErr)
 				}

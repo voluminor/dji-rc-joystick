@@ -240,6 +240,11 @@ KERNEL=="uinput", GROUP="input", MODE="0660"
 
 ## Windows backend
 
+The x64 Windows default is now an Xbox 360 device through ViGEmBus, using
+ViGEmClient.dll beside the executable. It requires the ViGEmBus driver, not
+vJoy. See [debug setup and mapping](../../docs/DEBUG-TESTING.md).
+Set `DJI_RC_GAMEPAD=vjoy` to use the legacy backend described below.
+
 The 64-bit Windows backend combines two APIs:
 
 - axes and buttons use an installed, enabled, preconfigured vJoy device;

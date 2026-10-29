@@ -56,6 +56,7 @@ type homeGamepadObj struct {
 	saveButton       *widget.Button
 	runButton        *widget.Button
 	platformHint     *widget.Label
+	backend          *widget.Select
 
 	leftStickCard  *widget.Card
 	rightStickCard *widget.Card
@@ -74,6 +75,24 @@ type homeGamepadObj struct {
 	lastErrorRevision uint64
 	updating          bool
 	dirty             bool
+	autoStartPending  bool
+	wantRunning       bool
+}
+
+const gamepadResumePreference = "gamepad.resume"
+
+func backendLabel(backend string) string {
+	if backend == "vjoy" {
+		return "vJoy"
+	}
+	return "ViGEmBus"
+}
+
+func backendID(label string) string {
+	if label == "vJoy" {
+		return "vjoy"
+	}
+	return "vigem"
 }
 
 func buildButtonGamepadActions() []string {
@@ -277,6 +296,14 @@ func (obj *homeGamepadObj) buildFields() {
 
 func (obj *homeGamepadObj) build() {
 	obj.buildFields()
+	obj.backend = widget.NewSelect([]string{"ViGEmBus", "vJoy"}, func(string) {
+		obj.handleMappingChange()
+		obj.refreshPlatformHint()
+	})
+	backendRow := container.NewBorder(nil, nil, widget.NewLabel("Output backend"), nil, obj.backend)
+	if runtime.GOOS != "windows" {
+		backendRow.Hide()
+	}
 	header := obj.buildHeader()
 	columns := container.NewGridWithColumns(
 		2,
@@ -295,6 +322,7 @@ func (obj *homeGamepadObj) build() {
 		"",
 		container.NewVBox(
 			header,
+			backendRow,
 			widget.NewSeparator(),
 			columns,
 			widget.NewSeparator(),
@@ -306,6 +334,7 @@ func (obj *homeGamepadObj) build() {
 func (obj *homeGamepadObj) load(mapping targetsettings.MappingObj) {
 	obj.updating = true
 	obj.saved = mapping
+	obj.backend.SetSelected(backendLabel(mapping.Backend))
 
 	axes := mapping.Axes
 	obj.axes[rc.AxisLeftH].action.SetSelected(axes.LeftStickH.Action)
@@ -337,11 +366,13 @@ func (obj *homeGamepadObj) load(mapping targetsettings.MappingObj) {
 
 func newHomeGamepad(owner *Obj, remote remoteInterface) *homeGamepadObj {
 	obj := &homeGamepadObj{
-		owner:   owner,
-		remote:  remote,
-		axes:    make(map[rc.AxisID]*axisFieldObj, rc.AxisCount),
-		buttons: make(map[rc.ButtonID]*buttonFieldObj, rc.ButtonCount),
-		phase:   gamepad.PhaseStopped,
+		owner:            owner,
+		remote:           remote,
+		axes:             make(map[rc.AxisID]*axisFieldObj, rc.AxisCount),
+		buttons:          make(map[rc.ButtonID]*buttonFieldObj, rc.ButtonCount),
+		phase:            gamepad.PhaseStopped,
+		autoStartPending: owner.application.Preferences().Bool(gamepadResumePreference),
+		wantRunning:      owner.application.Preferences().Bool(gamepadResumePreference),
 	}
 	obj.build()
 	obj.load(owner.data.Mapping())
@@ -413,10 +444,21 @@ func (obj *homeGamepadObj) refreshLanguage() {
 		"Button C2",
 	)
 
-	obj.platformHint.SetText(platformHint(lg))
+	obj.refreshPlatformHint()
 	obj.updateStatus()
 	obj.leftStickCard.Refresh()
 	obj.rightStickCard.Refresh()
 	obj.extraCard.Refresh()
 	obj.buttonsCard.Refresh()
+}
+
+func (obj *homeGamepadObj) refreshPlatformHint() {
+	if obj.platformHint == nil {
+		return
+	}
+	if runtime.GOOS == "windows" && obj.backend.Selected != "vJoy" {
+		obj.platformHint.SetText(obj.owner.lg("home.gamepad.platform.vigem", "Windows: ViGEmBus and ViGEmClient.dll are required for Xbox 360 emulation."))
+		return
+	}
+	obj.platformHint.SetText(platformHint(obj.owner.lg))
 }
